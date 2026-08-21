@@ -1,0 +1,26 @@
+[package]
+name = "win32-min"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.74"
+authors = ["zevs"]
+description = "Minimal hand-rolled Win32 FFI shim — the ~50 functions and types 90% of Windows Rust security / admin tooling actually calls, in one small crate. Feature-gated by subsystem (security-token, services, lsa-auth, eventlog). Zero windows-rs / winapi dep, sub-second compile, no version drift."
+license = "MIT"
+homepage = "https://github.com/icedracon/win32-min"
+repository = "https://github.com/icedracon/win32-min"
+documentation = "https://docs.rs/win32-min"
+readme = "README.md"
+keywords = ["windows", "win32", "ffi", "no-std", "minimal"]
+categories = ["os::windows-apis", "external-ffi-bindings", "no-std"]
+
+[features]
+default = []
+security-token = []
+services = []
+lsa-auth = []
+eventlog = []
+# Convenience alias — pull everything.
+full = ["security-token", "services", "lsa-auth", "eventlog"]
+
+[dependencies]
+# Zero. Everything is extern "system" declarations + repr(C) structs.
