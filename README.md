@@ -51,25 +51,30 @@ Hand-written bindings are only useful when they are demonstrably correct.
 - security, registry, token, and service constant values;
 - x86, x64, and ARM64 compilation;
 - harmless runtime symbol/link smoke tests on Windows; and
+- live API lifecycle tests for every feature, with temporary registry, file,
+  token, Event Log, LSA, process, thread, and service resources; and
 - the same layouts and values against the installed Microsoft Windows SDK C
   headers via [`scripts/verify-abi.ps1`](scripts/verify-abi.ps1).
 
-The current coverage is summarized in [`ABI-REPORT.md`](ABI-REPORT.md).
+The current coverage and commands are summarized in
+[`ABI-REPORT.md`](ABI-REPORT.md) and [`TEST-COVERAGE.md`](TEST-COVERAGE.md).
 
 New declarations should not be accepted without an ABI assertion and a real
 downstream use case.
 
 ## Live-validated
 
-Live-verified against Windows 11 build 22621 through downstream consumers:
+Live-verified directly on Windows 10 build 19044 and through downstream
+consumers on Windows 11 build 22621:
 
 - `windows-scm 0.2.0` `list_services` example — **316 services enumerated**
   through `OpenSCManagerW` + `EnumServicesStatusExW` two-call idiom, correct
   struct layouts, correct wide-string pointer walk, paging cursor works.
 - `windows-token 0.2.0` smoke test — `OpenProcessToken` + `DuplicateTokenEx`
   live against the calling process.
-- Registry, process, and SDDL conversion symbols are exercised by non-mutating
-  Windows smoke tests.
+- Every feature has a live Windows lifecycle test. The elevated SCM test
+  creates and deletes a uniquely named, stopped temporary service; the other
+  mutable tests likewise use unique test-owned resources and clean them up.
 
 ## Reproducible size/build comparison
 

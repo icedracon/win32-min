@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here.
 
+## Unreleased
+
+### Added
+
+- Live Windows lifecycle tests for process/thread, registry, security
+  descriptor, token, LSA authentication, Event Log, and service APIs.
+- An elevated CI test that creates, queries, and deletes a temporary stopped
+  service.
+
 ## 0.1.1 - 2026-08-27
 
 ### Fixed
