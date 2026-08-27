@@ -30,6 +30,9 @@ pub const STATUS_SUCCESS: NTSTATUS = 0;
 /// `HRESULT` — COM status code.
 pub type HRESULT = i32;
 
+/// `LSTATUS` — signed Win32 status returned by registry APIs.
+pub type LSTATUS = i32;
+
 /// Locally-unique identifier (`LUID` in ntdef.h) — 64-bit ID unique within a boot session.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,16 +52,50 @@ pub struct UNICODE_STRING {
 }
 
 impl UNICODE_STRING {
-    /// Build a `UNICODE_STRING` view over a UTF-16 slice. Caller keeps the slice
-    /// alive for the lifetime of the returned struct.
-    pub fn from_slice(slice: &mut [u16]) -> Self {
-        let len_bytes = (slice.len() * 2) as u16;
-        Self {
+    /// Maximum UTF-16 code units representable by `UNICODE_STRING::Length`.
+    pub const MAX_CODE_UNITS: usize = u16::MAX as usize / 2;
+
+    /// Build a checked `UNICODE_STRING` view over a UTF-16 slice.
+    ///
+    /// Returns `None` when the byte length cannot be represented by the Win32
+    /// `u16` length fields.
+    pub fn try_from_slice(slice: &mut [u16]) -> Option<Self> {
+        let len_bytes = slice.len().checked_mul(core::mem::size_of::<u16>())?;
+        let len_bytes = u16::try_from(len_bytes).ok()?;
+        Some(Self {
             Length: len_bytes,
             MaximumLength: len_bytes,
             Buffer: slice.as_mut_ptr(),
-        }
+        })
     }
+
+    /// Build a `UNICODE_STRING` view over a UTF-16 slice. Caller keeps the slice
+    /// alive for the lifetime of the returned struct.
+    ///
+    /// # Panics
+    ///
+    /// Panics when the slice is longer than [`Self::MAX_CODE_UNITS`]. Use
+    /// [`Self::try_from_slice`] for fallible construction.
+    pub fn from_slice(slice: &mut [u16]) -> Self {
+        Self::try_from_slice(slice).expect("UNICODE_STRING byte length exceeds u16::MAX")
+    }
+}
+
+/// `FILETIME` — a 64-bit count split into two 32-bit words.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct FILETIME {
+    pub dwLowDateTime: u32,
+    pub dwHighDateTime: u32,
+}
+
+/// `SECURITY_ATTRIBUTES` used by object-creation APIs.
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct SECURITY_ATTRIBUTES {
+    pub nLength: u32,
+    pub lpSecurityDescriptor: *mut c_void,
+    pub bInheritHandle: BOOL,
 }
 
 /// `LARGE_INTEGER` (union type in C; we use the 64-bit signed variant).
@@ -126,4 +163,15 @@ const _: () = {
     assert!(core::mem::size_of::<UNICODE_STRING>() == 16);
     // GUID: u32(4) + u16(2) + u16(2) + [u8;8] = 16
     assert!(core::mem::size_of::<GUID>() == 16);
+    assert!(core::mem::size_of::<FILETIME>() == 8);
+    assert!(core::mem::size_of::<SECURITY_ATTRIBUTES>() == 24);
+};
+
+#[cfg(target_pointer_width = "32")]
+const _: () = {
+    assert!(core::mem::size_of::<LUID>() == 8);
+    assert!(core::mem::size_of::<UNICODE_STRING>() == 8);
+    assert!(core::mem::size_of::<GUID>() == 16);
+    assert!(core::mem::size_of::<FILETIME>() == 8);
+    assert!(core::mem::size_of::<SECURITY_ATTRIBUTES>() == 12);
 };

@@ -27,7 +27,7 @@ pub const TOKEN_ASSIGN_PRIMARY: u32 = 0x0001;
 pub const TOKEN_READ: u32 = 0x0002_0008;
 pub const TOKEN_WRITE: u32 = 0x0002_00e0;
 pub const TOKEN_EXECUTE: u32 = 0x0002_0000;
-pub const TOKEN_ALL_ACCESS: u32 = 0x000f_00ff;
+pub const TOKEN_ALL_ACCESS: u32 = 0x000f_01ff;
 
 // Privilege-attribute bits (winnt.h `SE_PRIVILEGE_*`).
 pub const SE_PRIVILEGE_ENABLED_BY_DEFAULT: u32 = 0x0000_0001;
@@ -162,6 +162,8 @@ pub struct TOKEN_MANDATORY_LABEL {
 extern "system" {
     pub fn GetCurrentProcess() -> HANDLE;
     pub fn GetCurrentThread() -> HANDLE;
+
+    pub fn OpenProcess(dwDesiredAccess: u32, bInheritHandle: BOOL, dwProcessId: u32) -> HANDLE;
 }
 
 #[link(name = "advapi32")]
@@ -194,11 +196,7 @@ extern "system" {
 
     pub fn RevertToSelf() -> BOOL;
 
-    pub fn LookupPrivilegeValueW(
-        lpSystemName: PCWSTR,
-        lpName: PCWSTR,
-        lpLuid: *mut LUID,
-    ) -> BOOL;
+    pub fn LookupPrivilegeValueW(lpSystemName: PCWSTR, lpName: PCWSTR, lpLuid: *mut LUID) -> BOOL;
 
     pub fn AdjustTokenPrivileges(
         TokenHandle: HANDLE,
@@ -223,12 +221,6 @@ extern "system" {
         TokenInformation: *const c_void,
         TokenInformationLength: u32,
     ) -> BOOL;
-
-    pub fn OpenProcess(
-        dwDesiredAccess: u32,
-        bInheritHandle: BOOL,
-        dwProcessId: u32,
-    ) -> HANDLE;
 
     // ---- SID helpers (winnt.h / winbase.h — all in advapi32) ----
 
@@ -255,5 +247,12 @@ const _: () = {
     // SID_IDENTIFIER_AUTHORITY: [u8;6] = 6
     assert!(core::mem::size_of::<SID_IDENTIFIER_AUTHORITY>() == 6);
     // TOKEN_PRIVILEGES: PrivilegeCount u32(4) + [LUID_AND_ATTRIBUTES;1](12) = 16
+    assert!(core::mem::size_of::<TOKEN_PRIVILEGES>() == 16);
+};
+
+#[cfg(target_pointer_width = "32")]
+const _: () = {
+    assert!(core::mem::size_of::<LUID_AND_ATTRIBUTES>() == 12);
+    assert!(core::mem::size_of::<SID_IDENTIFIER_AUTHORITY>() == 6);
     assert!(core::mem::size_of::<TOKEN_PRIVILEGES>() == 16);
 };

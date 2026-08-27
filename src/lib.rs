@@ -1,8 +1,7 @@
 //! # win32-min
 //!
-//! Minimal, hand-rolled Win32 FFI shim — the ~50 functions and types 90% of
-//! Windows Rust security / admin / audit tooling actually calls, packaged as one
-//! small crate with **zero `windows-rs` or `winapi` dependency**.
+//! Minimal, hand-rolled Win32 FFI for Windows security, administration, and
+//! audit tooling, packaged as one small crate with **zero runtime dependencies**.
 //!
 //! ## Design
 //!
@@ -21,7 +20,10 @@
 //! | `services` | Service Control Manager (local) | `windows-scm` |
 //! | `lsa-auth` | LSA authentication package | `windows-lsa` |
 //! | `eventlog` | EventLog v6 (Evt* API) | `windows-eventlog-native` |
-//! | `full` | all four | — |
+//! | `process-thread` | Process/thread discovery and inspection | — |
+//! | `registry` | Registry open/query/enumeration | — |
+//! | `security-descriptor` | ACL/security-descriptor conversion and access | `windows-sddl` ecosystem |
+//! | `full` | every subsystem | — |
 //!
 //! ## Why not `windows-rs` or `winapi`
 //!
@@ -51,7 +53,7 @@
     non_upper_case_globals,
     clippy::upper_case_acronyms
 )]
-#![cfg_attr(not(feature = "eventlog"), no_std)] // eventlog needs alloc for XML
+#![no_std]
 
 pub mod foundation;
 
@@ -66,3 +68,12 @@ pub mod lsa_auth;
 
 #[cfg(feature = "eventlog")]
 pub mod eventlog;
+
+#[cfg(feature = "process-thread")]
+pub mod process_thread;
+
+#[cfg(feature = "registry")]
+pub mod registry;
+
+#[cfg(feature = "security-descriptor")]
+pub mod security_descriptor;

@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo test --all-features
+      - run: cargo package
+      - name: Verify Windows SDK ABI (x64)
+        shell: pwsh
+        run: ./scripts/verify-abi.ps1 -Arch x64
+      - name: Verify Windows SDK ABI (x86)
+        shell: pwsh
+        run: ./scripts/verify-abi.ps1 -Arch x86
+      - name: Verify Windows SDK ABI (ARM64)
+        shell: pwsh
+        run: ./scripts/verify-abi.ps1 -Arch arm64
+
+  targets:
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        target:
+          - i686-pc-windows-msvc
+          - x86_64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo check --all-features --target ${{ matrix.target }}
+      - run: cargo check --no-default-features --target ${{ matrix.target }}

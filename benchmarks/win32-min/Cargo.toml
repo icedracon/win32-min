@@ -1,0 +1,10 @@
+[package]
+name = "bench-win32-min"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+win32-min = { path = "../..", features = ["process-thread"] }

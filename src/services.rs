@@ -192,10 +192,7 @@ extern "system" {
         pcbBytesNeeded: *mut u32,
     ) -> BOOL;
 
-    pub fn QueryServiceStatus(
-        hService: SC_HANDLE,
-        lpServiceStatus: *mut SERVICE_STATUS,
-    ) -> BOOL;
+    pub fn QueryServiceStatus(hService: SC_HANDLE, lpServiceStatus: *mut SERVICE_STATUS) -> BOOL;
 
     pub fn EnumServicesStatusExW(
         hSCManager: SC_HANDLE,
@@ -239,4 +236,11 @@ const _: () = {
     assert!(core::mem::size_of::<SERVICE_STATUS_PROCESS>() == 36);
     // ENUM_SERVICE_STATUS_PROCESSW: 2 × PWSTR(8) + SERVICE_STATUS_PROCESS(36) = 52 → align 8 → 56
     assert!(core::mem::size_of::<ENUM_SERVICE_STATUS_PROCESSW>() == 56);
+};
+
+#[cfg(target_pointer_width = "32")]
+const _: () = {
+    assert!(core::mem::size_of::<SERVICE_STATUS>() == 28);
+    assert!(core::mem::size_of::<SERVICE_STATUS_PROCESS>() == 36);
+    assert!(core::mem::size_of::<ENUM_SERVICE_STATUS_PROCESSW>() == 44);
 };

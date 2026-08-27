@@ -44,12 +44,7 @@ extern "system" {
     /// `EvtQuery` — open a query on a channel path or saved-log file.
     /// Returns a query handle to feed to [`EvtNext`]. `Session` is `NULL` for
     /// local; remote sessions come from `EvtOpenSession` (not exposed here yet).
-    pub fn EvtQuery(
-        Session: EVT_HANDLE,
-        Path: PCWSTR,
-        Query: PCWSTR,
-        Flags: u32,
-    ) -> EVT_HANDLE;
+    pub fn EvtQuery(Session: EVT_HANDLE, Path: PCWSTR, Query: PCWSTR, Flags: u32) -> EVT_HANDLE;
 
     /// `EvtNext` — advance the query cursor, retrieving up to
     /// `EventsSize` event handles at once.

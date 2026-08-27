@@ -27,16 +27,29 @@ pub struct LSA_STRING {
 }
 
 impl LSA_STRING {
-    /// Build an `LSA_STRING` view over an ANSI byte slice (typically an ASCII
-    /// package name like `"Kerberos"` or `"Negotiate"`). Caller keeps the
-    /// slice alive for the lifetime of the returned struct.
-    pub fn from_slice(slice: &mut [u8]) -> Self {
-        let len = slice.len() as u16;
-        Self {
+    /// Maximum byte length representable by an `LSA_STRING`.
+    pub const MAX_BYTES: usize = u16::MAX as usize;
+
+    /// Build a checked `LSA_STRING` view over an ANSI byte slice.
+    pub fn try_from_slice(slice: &mut [u8]) -> Option<Self> {
+        let len = u16::try_from(slice.len()).ok()?;
+        Some(Self {
             Length: len,
             MaximumLength: len,
             Buffer: slice.as_mut_ptr(),
-        }
+        })
+    }
+
+    /// Build an `LSA_STRING` view over an ANSI byte slice (typically an ASCII
+    /// package name like `"Kerberos"` or `"Negotiate"`). Caller keeps the
+    /// slice alive for the lifetime of the returned struct.
+    ///
+    /// # Panics
+    ///
+    /// Panics when the slice is longer than [`Self::MAX_BYTES`]. Use
+    /// [`Self::try_from_slice`] for fallible construction.
+    pub fn from_slice(slice: &mut [u8]) -> Self {
+        Self::try_from_slice(slice).expect("LSA_STRING length exceeds u16::MAX")
     }
 }
 
@@ -90,4 +103,9 @@ extern "system" {
 const _: () = {
     // LSA_STRING: u16(2) + u16(2) + *mut u8(8) = align 8 → 16
     assert!(core::mem::size_of::<LSA_STRING>() == 16);
+};
+
+#[cfg(target_pointer_width = "32")]
+const _: () = {
+    assert!(core::mem::size_of::<LSA_STRING>() == 8);
 };
