@@ -37,7 +37,9 @@ pub type LSTATUS = i32;
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LUID {
+    /// Low 32 bits of the identifier.
     pub LowPart: u32,
+    /// High 32 bits of the identifier.
     pub HighPart: i32,
 }
 
@@ -46,8 +48,11 @@ pub struct LUID {
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct UNICODE_STRING {
+    /// Current string length in bytes, excluding any terminator.
     pub Length: u16,
+    /// Capacity in bytes.
     pub MaximumLength: u16,
+    /// Borrowed pointer to the UTF-16 code units.
     pub Buffer: *mut u16,
 }
 
@@ -85,7 +90,9 @@ impl UNICODE_STRING {
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FILETIME {
+    /// Low 32 bits of the timestamp.
     pub dwLowDateTime: u32,
+    /// High 32 bits of the timestamp.
     pub dwHighDateTime: u32,
 }
 
@@ -93,8 +100,11 @@ pub struct FILETIME {
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct SECURITY_ATTRIBUTES {
+    /// Size of this structure in bytes.
     pub nLength: u32,
+    /// Optional security descriptor pointer.
     pub lpSecurityDescriptor: *mut c_void,
+    /// Whether a newly created handle is inheritable.
     pub bInheritHandle: BOOL,
 }
 
@@ -117,6 +127,7 @@ impl PCWSTR {
 pub struct PWSTR(pub *mut u16);
 
 impl PWSTR {
+    /// Null pointer (no string or buffer).
     pub const NULL: Self = PWSTR(core::ptr::null_mut());
 }
 
@@ -126,16 +137,31 @@ impl PWSTR {
 pub struct PSTR(pub *mut u8);
 
 impl PSTR {
+    /// Null pointer (no string or buffer).
     pub const NULL: Self = PSTR(core::ptr::null_mut());
+}
+
+/// Pointer to a null-terminated immutable ANSI string (`LPCSTR` / `PCSTR`).
+#[repr(transparent)]
+#[derive(Debug, Clone, Copy)]
+pub struct PCSTR(pub *const u8);
+
+impl PCSTR {
+    /// Null pointer (no string).
+    pub const NULL: Self = PCSTR(core::ptr::null());
 }
 
 /// `GUID` — 128-bit interface / class ID.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GUID {
+    /// First 32 bits of the GUID.
     pub Data1: u32,
+    /// Next 16 bits of the GUID.
     pub Data2: u16,
+    /// Next 16 bits of the GUID.
     pub Data3: u16,
+    /// Final 64 bits of the GUID.
     pub Data4: [u8; 8],
 }
 
@@ -144,12 +170,28 @@ pub struct GUID {
 #[link(name = "kernel32")]
 extern "system" {
     /// Close a Win32 kernel object handle.
+    ///
+    /// # Safety
+    ///
+    /// `hObject` must be a valid owned handle whose documented destruction
+    /// function is `CloseHandle`. It must not be a pseudo-handle or already
+    /// closed, and no concurrent user may depend on its continued validity.
     pub fn CloseHandle(hObject: HANDLE) -> BOOL;
 
     /// `GetLastError` — thread-local Win32 error code from the last failing call.
+    ///
+    /// # Safety
+    ///
+    /// This function has no memory-safety preconditions. Call it immediately
+    /// after the function whose failure code is needed.
     pub fn GetLastError() -> u32;
 
     /// `SetLastError` — mostly used in error-path composition.
+    ///
+    /// # Safety
+    ///
+    /// This function has no memory-safety preconditions, but it mutates
+    /// thread-local error state observed by subsequent code.
     pub fn SetLastError(dwErrCode: u32);
 }
 

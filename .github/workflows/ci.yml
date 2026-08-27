@@ -17,9 +17,23 @@ jobs:
           components: clippy, rustfmt
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Verify FFI safety contracts
+        shell: pwsh
+        run: ./scripts/verify-safety-docs.ps1
+      - name: Verify zero-dependency policy
+        shell: pwsh
+        run: ./scripts/verify-zero-deps.ps1
       - run: cargo test --all-features
+      - run: cargo test --no-default-features
       - name: Test elevated service lifecycle
         run: cargo test --all-features --test services_live -- --ignored --test-threads=1
+      - name: Check examples
+        run: cargo check --all-features --examples
+      - name: Build complete documentation
+        shell: pwsh
+        run: |
+          $env:RUSTDOCFLAGS = '-D warnings -D missing-docs'
+          cargo doc --all-features --no-deps
       - run: cargo package
       - name: Verify Windows SDK ABI (x64)
         shell: pwsh
@@ -46,3 +60,20 @@ jobs:
           targets: ${{ matrix.target }}
       - run: cargo check --all-features --target ${{ matrix.target }}
       - run: cargo check --no-default-features --target ${{ matrix.target }}
+
+  msrv:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.74.1
+      - run: cargo check --all-features
+      - run: cargo test --all-features
+
+  arm64-runtime:
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --all-features -- --test-threads=1

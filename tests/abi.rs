@@ -133,10 +133,11 @@ fn service_layout_matches_windows_sdk() {
     }
 }
 
-#[cfg(feature = "process-thread")]
+#[cfg(all(feature = "process", feature = "thread"))]
 #[test]
 fn process_thread_layout_matches_windows_sdk() {
-    use win32_min::process_thread::{PROCESSENTRY32W, THREADENTRY32};
+    use win32_min::process::{PROCESSENTRY32W, PROCESS_INFORMATION};
+    use win32_min::thread::THREADENTRY32;
 
     assert_eq!(size_of::<THREADENTRY32>(), 28);
     assert_eq!(offset_of!(THREADENTRY32, th32ThreadID), 8);
@@ -148,6 +149,8 @@ fn process_thread_layout_matches_windows_sdk() {
         assert_eq!(align_of::<PROCESSENTRY32W>(), 8);
         assert_eq!(offset_of!(PROCESSENTRY32W, th32DefaultHeapID), 16);
         assert_eq!(offset_of!(PROCESSENTRY32W, szExeFile), 44);
+        assert_eq!(size_of::<PROCESS_INFORMATION>(), 24);
+        assert_eq!(offset_of!(PROCESS_INFORMATION, dwProcessId), 16);
     }
 
     #[cfg(target_pointer_width = "32")]
@@ -156,15 +159,18 @@ fn process_thread_layout_matches_windows_sdk() {
         assert_eq!(align_of::<PROCESSENTRY32W>(), 4);
         assert_eq!(offset_of!(PROCESSENTRY32W, th32DefaultHeapID), 12);
         assert_eq!(offset_of!(PROCESSENTRY32W, szExeFile), 36);
+        assert_eq!(size_of::<PROCESS_INFORMATION>(), 16);
+        assert_eq!(offset_of!(PROCESS_INFORMATION, dwProcessId), 8);
     }
 }
 
-#[cfg(feature = "security-descriptor")]
+#[cfg(feature = "security")]
 #[test]
 fn security_descriptor_layout_and_constants_match_windows_sdk() {
-    use win32_min::security_descriptor::{
-        ACE_HEADER, ACL, DACL_SECURITY_INFORMATION, PROTECTED_DACL_SECURITY_INFORMATION,
-        SECURITY_DESCRIPTOR_RELATIVE, SE_SELF_RELATIVE,
+    use win32_min::security::{
+        ACCESS_ALLOWED_ACE, ACCESS_DENIED_ACE, ACE_HEADER, ACL, DACL_SECURITY_INFORMATION,
+        GENERIC_MAPPING, PRIVILEGE_SET, PROTECTED_DACL_SECURITY_INFORMATION, SECURITY_DESCRIPTOR,
+        SECURITY_DESCRIPTOR_RELATIVE, SE_SELF_RELATIVE, SID,
     };
 
     assert_eq!(size_of::<ACL>(), 8);
@@ -178,6 +184,56 @@ fn security_descriptor_layout_and_constants_match_windows_sdk() {
     assert_eq!(SE_SELF_RELATIVE, 0x8000);
     assert_eq!(DACL_SECURITY_INFORMATION, 0x0000_0004);
     assert_eq!(PROTECTED_DACL_SECURITY_INFORMATION, 0x8000_0000);
+    assert_eq!(size_of::<ACCESS_ALLOWED_ACE>(), 12);
+    assert_eq!(offset_of!(ACCESS_ALLOWED_ACE, SidStart), 8);
+    assert_eq!(size_of::<ACCESS_DENIED_ACE>(), 12);
+    assert_eq!(size_of::<SID>(), 12);
+    assert_eq!(size_of::<GENERIC_MAPPING>(), 16);
+    assert_eq!(size_of::<PRIVILEGE_SET>(), 20);
+
+    #[cfg(target_pointer_width = "64")]
+    {
+        assert_eq!(size_of::<SECURITY_DESCRIPTOR>(), 40);
+        assert_eq!(offset_of!(SECURITY_DESCRIPTOR, Owner), 8);
+        assert_eq!(offset_of!(SECURITY_DESCRIPTOR, Dacl), 32);
+    }
+
+    #[cfg(target_pointer_width = "32")]
+    {
+        assert_eq!(size_of::<SECURITY_DESCRIPTOR>(), 20);
+        assert_eq!(offset_of!(SECURITY_DESCRIPTOR, Owner), 4);
+        assert_eq!(offset_of!(SECURITY_DESCRIPTOR, Dacl), 16);
+    }
+}
+
+#[cfg(feature = "file")]
+#[test]
+fn file_layout_and_constants_match_windows_sdk() {
+    use win32_min::file::{
+        BY_HANDLE_FILE_INFORMATION, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_OPEN_REPARSE_POINT,
+        OPEN_EXISTING, WIN32_FILE_ATTRIBUTE_DATA,
+    };
+
+    assert_eq!(size_of::<WIN32_FILE_ATTRIBUTE_DATA>(), 36);
+    assert_eq!(offset_of!(WIN32_FILE_ATTRIBUTE_DATA, nFileSizeHigh), 28);
+    assert_eq!(size_of::<BY_HANDLE_FILE_INFORMATION>(), 52);
+    assert_eq!(
+        offset_of!(BY_HANDLE_FILE_INFORMATION, dwVolumeSerialNumber),
+        28
+    );
+    assert_eq!(offset_of!(BY_HANDLE_FILE_INFORMATION, nFileIndexLow), 48);
+    assert_eq!(OPEN_EXISTING, 3);
+    assert_eq!(FILE_ATTRIBUTE_REPARSE_POINT, 0x400);
+    assert_eq!(FILE_FLAG_OPEN_REPARSE_POINT, 0x0020_0000);
+}
+
+#[cfg(feature = "module")]
+#[test]
+fn module_pointer_types_match_the_target() {
+    use win32_min::module::{FARPROC, HMODULE};
+
+    assert_eq!(size_of::<HMODULE>(), size_of::<usize>());
+    assert_eq!(size_of::<FARPROC>(), size_of::<usize>());
 }
 
 #[cfg(feature = "registry")]

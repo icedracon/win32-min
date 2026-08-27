@@ -44,10 +44,22 @@ extern "system" {
     /// `EvtQuery` — open a query on a channel path or saved-log file.
     /// Returns a query handle to feed to [`EvtNext`]. `Session` is `NULL` for
     /// local; remote sessions come from `EvtOpenSession` (not exposed here yet).
+    ///
+    /// # Safety
+    ///
+    /// `Session` must be null or a valid event-log session. Path and query must
+    /// be null where permitted or readable null-terminated UTF-16 strings. A
+    /// successful returned handle is owned and must be closed with [`EvtClose`].
     pub fn EvtQuery(Session: EVT_HANDLE, Path: PCWSTR, Query: PCWSTR, Flags: u32) -> EVT_HANDLE;
 
     /// `EvtNext` — advance the query cursor, retrieving up to
     /// `EventsSize` event handles at once.
+    ///
+    /// # Safety
+    ///
+    /// `ResultSet` must be a valid query. `Events` must provide writable
+    /// storage for `EventsSize` handles and `Returned` must be writable. Each
+    /// returned event handle is owned and must be closed exactly once.
     pub fn EvtNext(
         ResultSet: EVT_HANDLE,
         EventsSize: u32,
@@ -59,6 +71,13 @@ extern "system" {
 
     /// `EvtRender` — serialize an event (or bookmark) into `Buffer` at the requested `Flags`.
     /// If `BufferSize` is 0, fills `BufferUsed` with the required byte count.
+    ///
+    /// # Safety
+    ///
+    /// Context and fragment handles must be valid for the render mode.
+    /// `BufferUsed` and `PropertyCount` must be writable. `Buffer` may be null
+    /// for a zero-sized query; otherwise it must provide `BufferSize` writable
+    /// bytes with suitable alignment for the selected representation.
     pub fn EvtRender(
         Context: EVT_HANDLE,
         Fragment: EVT_HANDLE,
@@ -70,5 +89,10 @@ extern "system" {
     ) -> BOOL;
 
     /// `EvtClose` — release any `EVT_HANDLE` (query, event, session, bookmark, context).
+    ///
+    /// # Safety
+    ///
+    /// `Object` must be a valid uniquely owned event-log handle and must not
+    /// already have been closed.
     pub fn EvtClose(Object: EVT_HANDLE) -> BOOL;
 }

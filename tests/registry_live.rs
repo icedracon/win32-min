@@ -6,8 +6,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use win32_min::foundation::{PCWSTR, PWSTR};
 use win32_min::registry::{
     RegCloseKey, RegCreateKeyExW, RegDeleteKeyExW, RegDeleteValueW, RegEnumKeyExW, RegEnumValueW,
-    RegFlushKey, RegOpenKeyExW, RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CURRENT_USER,
-    KEY_ALL_ACCESS, NULL_HKEY, REG_CREATED_NEW_KEY, REG_DWORD, REG_OPTION_NON_VOLATILE, REG_SZ,
+    RegFlushKey, RegOpenKeyExW, RegQueryInfoKeyW, RegQueryValueExW, RegSetValueExW, HKEY,
+    HKEY_CURRENT_USER, KEY_ALL_ACCESS, NULL_HKEY, REG_CREATED_NEW_KEY, REG_DWORD,
+    REG_OPTION_NON_VOLATILE, REG_SZ,
 };
 
 const ERROR_SUCCESS: i32 = 0;
@@ -190,6 +191,36 @@ fn temporary_registry_key_full_lifecycle() {
         },
         ERROR_SUCCESS
     );
+
+    let mut subkey_count = 0u32;
+    let mut max_subkey_len = 0u32;
+    let mut value_count = 0u32;
+    let mut max_value_name_len = 0u32;
+    let mut max_value_len = 0u32;
+    assert_eq!(
+        unsafe {
+            RegQueryInfoKeyW(
+                cleanup.parent,
+                PWSTR::NULL,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                &mut subkey_count,
+                &mut max_subkey_len,
+                std::ptr::null_mut(),
+                &mut value_count,
+                &mut max_value_name_len,
+                &mut max_value_len,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+            )
+        },
+        ERROR_SUCCESS
+    );
+    assert_eq!(subkey_count, 1);
+    assert_eq!(max_subkey_len, "child".len() as u32);
+    assert_eq!(value_count, 2);
+    assert!(max_value_name_len >= "Answer".len() as u32);
+    assert!(max_value_len >= size_of::<u32>() as u32);
 
     let mut child_buffer = [0u16; 256];
     let mut child_len = child_buffer.len() as u32;

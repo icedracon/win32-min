@@ -16,13 +16,18 @@
 //!
 //! | Feature | Subsystem | Downstream consumer |
 //! |---|---|---|
+//! | `process` | Process discovery and inspection | security inventory tools |
+//! | `thread` | Thread discovery and control | diagnostics tools |
+//! | `module` | DLL loading and symbol lookup | dynamic integrations |
+//! | `file` | File identity and metadata | DFIR tools |
+//! | `security` | ACL/security-descriptor inspection | ACL auditors |
 //! | `security-token` | Token / privilege / impersonation | `windows-token` |
 //! | `services` | Service Control Manager (local) | `windows-scm` |
 //! | `lsa-auth` | LSA authentication package | `windows-lsa` |
 //! | `eventlog` | EventLog v6 (Evt* API) | `windows-eventlog-native` |
-//! | `process-thread` | Process/thread discovery and inspection | — |
 //! | `registry` | Registry open/query/enumeration | — |
-//! | `security-descriptor` | ACL/security-descriptor conversion and access | `windows-sddl` ecosystem |
+//! | `process-thread` | Compatibility alias for `process` + `thread` | — |
+//! | `security-descriptor` | Compatibility alias for `security` | `windows-sddl` ecosystem |
 //! | `full` | every subsystem | — |
 //!
 //! ## Why not `windows-rs` or `winapi`
@@ -53,9 +58,26 @@
     non_upper_case_globals,
     clippy::upper_case_acronyms
 )]
+#![warn(missing_docs)]
 #![no_std]
 
+mod error;
 pub mod foundation;
+pub mod handles;
+
+pub use error::Win32Error;
+
+#[cfg(feature = "process")]
+pub mod process;
+
+#[cfg(feature = "thread")]
+pub mod thread;
+
+#[cfg(feature = "module")]
+pub mod module;
+
+#[cfg(feature = "file")]
+pub mod file;
 
 #[cfg(feature = "security-token")]
 pub mod security_token;
@@ -69,11 +91,20 @@ pub mod lsa_auth;
 #[cfg(feature = "eventlog")]
 pub mod eventlog;
 
-#[cfg(feature = "process-thread")]
+#[cfg(all(feature = "process", feature = "thread"))]
 pub mod process_thread;
 
 #[cfg(feature = "registry")]
 pub mod registry;
 
-#[cfg(feature = "security-descriptor")]
+#[cfg(feature = "security")]
 pub mod security_descriptor;
+
+/// ACL and security-descriptor primitives.
+///
+/// The `security_descriptor` module name remains available for compatibility
+/// with 0.1.1; new code should prefer this shorter module name.
+#[cfg(feature = "security")]
+pub mod security {
+    pub use crate::security_descriptor::*;
+}

@@ -22,8 +22,11 @@ cargo test --all-features --test services_live -- --ignored --test-threads=1
 | `abi.rs` | Windows SDK-compatible sizes, alignment, offsets, constants, and checked counted-string constructors |
 | `windows_smoke.rs` | Kernel32 and Advapi32 linking, current-process access, HKCU access, and SDDL conversion |
 | `process_thread_live.rs` | Last-error state, process/thread pseudo and owned handles, image path lookup, Toolhelp enumeration, and termination of a test-owned child |
-| `registry_live.rs` | Create, set, query, enumerate, flush, reopen, and delete a unique HKCU key tree |
-| `security_descriptor_live.rs` | SDDL conversion plus named-file and handle-based security descriptor round trips on a unique temporary file |
+| `file_live.rs` | Attributes, two-call final-path sizing, by-handle file identity, move, and delete on a unique temporary file |
+| `module_live.rs` | Borrowed main-module lookup, module path, DLL reference ownership, symbol lookup, and release |
+| `handles_live.rs` | `Win32Error` message formatting plus typed kernel, process, thread, token, registry, and SCM ownership/transfer |
+| `registry_live.rs` | Create, set, query, metadata sizing, enumerate, flush, reopen, and delete a unique HKCU key tree |
+| `security_descriptor_live.rs` | SDDL conversion; owner/group/DACL/SACL inspection; absolute descriptor construction and `AccessCheck`; named-file and handle security round trips |
 | `security_token_live.rs` | Process and thread tokens, duplication, information get/set, SID helpers, privilege adjustment, and impersonation/revert |
 | `lsa_live.rs` | Untrusted LSA connection, Kerberos package lookup and query, returned-buffer release, and deregistration |
 | `eventlog_live.rs` | Application log query, event retrieval, two-call XML rendering, and handle closure |
@@ -40,12 +43,17 @@ CI additionally runs:
 ```powershell
 cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
+cargo test --no-default-features
+cargo doc --all-features --no-deps
+cargo check --all-features --examples
 cargo check --all-features --target i686-pc-windows-msvc
 cargo check --all-features --target x86_64-pc-windows-msvc
 cargo check --all-features --target aarch64-pc-windows-msvc
 ./scripts/verify-abi.ps1 -Arch x64
 ./scripts/verify-abi.ps1 -Arch x86
 ./scripts/verify-abi.ps1 -Arch arm64
+./scripts/verify-safety-docs.ps1
+./scripts/verify-zero-deps.ps1
 cargo package
 ```
 
@@ -53,10 +61,16 @@ The minimum supported Rust version is also checked locally with Rust 1.74.1.
 
 ## Validated systems
 
-- Windows 10 Enterprise Evaluation 10.0.19044, x86_64: 23 normal tests and
-  the separate elevated service lifecycle test passed on 2026-08-27.
+- Windows 10 Enterprise Evaluation 10.0.19044.1288, x86_64: 0.1.2 passed
+  31 normal tests plus the separate elevated create/query/delete service
+  lifecycle test. The transferred test binaries used static CRT linkage, which
+  was verified with `dumpbin /dependents` before execution.
 - Windows 11 build 22621: downstream SCM and token consumers have been
   exercised live as described in the README.
+
+The 0.1.2 source-compatibility gate also builds `windows-token`, `windows-scm`,
+`windows-lsa`, and `windows-eventlog-native` against the local crate, plus the
+standalone benchmark client as a fifth consumer.
 
 On local-account sessions without Kerberos credentials, the LSA dispatch call
 can succeed while the Kerberos package returns

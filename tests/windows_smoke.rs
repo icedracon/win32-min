@@ -1,6 +1,6 @@
 #![cfg(windows)]
 
-#[cfg(feature = "process-thread")]
+#[cfg(all(feature = "process", feature = "thread"))]
 #[test]
 fn opens_current_process_and_resolves_kernel32_symbols() {
     use win32_min::foundation::CloseHandle;
@@ -30,7 +30,7 @@ fn opens_current_user_registry_and_resolves_advapi32_symbols() {
     assert_eq!(unsafe { RegCloseKey(key) }, 0);
 }
 
-#[cfg(feature = "security-descriptor")]
+#[cfg(feature = "security")]
 #[test]
 fn converts_sddl_and_resolves_security_descriptor_symbols() {
     use win32_min::foundation::PCWSTR;

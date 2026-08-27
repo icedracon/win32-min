@@ -1,6 +1,6 @@
 [package]
 name = "win32-min"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 rust-version = "1.74"
 authors = ["zevs"]
@@ -16,23 +16,56 @@ categories = ["os::windows-apis", "external-ffi-bindings", "no-std"]
 
 [features]
 default = []
+process = []
+thread = []
+module = []
+file = []
 security-token = []
 services = []
 lsa-auth = []
 eventlog = []
-process-thread = []
 registry = []
-security-descriptor = []
+security = []
+# Compatibility feature names retained from 0.1.1.
+process-thread = ["process", "thread"]
+security-descriptor = ["security"]
 # Convenience alias — pull everything.
 full = [
+    "process",
+    "thread",
+    "module",
+    "file",
     "security-token",
     "services",
     "lsa-auth",
     "eventlog",
-    "process-thread",
     "registry",
-    "security-descriptor",
+    "security",
 ]
+
+[[example]]
+name = "process"
+required-features = ["process"]
+
+[[example]]
+name = "token"
+required-features = ["security-token"]
+
+[[example]]
+name = "registry"
+required-features = ["registry"]
+
+[[example]]
+name = "service"
+required-features = ["services"]
+
+[[example]]
+name = "eventlog"
+required-features = ["eventlog"]
+
+[[example]]
+name = "security"
+required-features = ["security"]
 
 [dependencies]
 # Zero. Everything is extern "system" declarations + repr(C) structs.

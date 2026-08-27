@@ -4,12 +4,38 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+## 0.1.2 - 2026-08-27
+
 ### Added
 
+- Independent `process`, `thread`, `module`, `file`, and `security` features;
+  the 0.1.1 feature names remain as compatibility aliases.
+- Process/thread access types and `PROCESS_INFORMATION`, plus test-owned
+  suspend/resume validation.
+- Security-focused file metadata, identity, final-path, move, and delete APIs.
+- Minimal DLL loading, module lookup, symbol resolution, and release APIs.
+- ACL inspection and access-check primitives including absolute security
+  descriptors, allowed/denied ACEs, SIDs, generic mappings, and privilege sets.
+- `RegQueryInfoKeyW` for correct registry enumeration buffer sizing.
+- Zero-dependency `Win32Error` message formatting and subsystem-specific owned
+  `Handle`, `ProcessHandle`, `ThreadHandle`, `TokenHandle`, `RegistryKey`, and
+  `ServiceHandle` wrappers.
+- Six runnable process, token, registry, service, Event Log, and security
+  examples.
 - Live Windows lifecycle tests for process/thread, registry, security
-  descriptor, token, LSA authentication, Event Log, and service APIs.
+  descriptor, token, LSA authentication, Event Log, module, file, handle, and
+  service APIs.
 - An elevated CI test that creates, queries, and deletes a temporary stopped
   service.
+- Native Windows ARM64 CI, Rust 1.74.1 MSRV CI, missing-documentation checks,
+  per-function FFI safety-contract checks, and a zero-dependency policy gate.
+
+### Changed
+
+- Expanded the reproducible `win32-min` / `windows-sys` / `windows` comparison
+  with incremental rebuild, rustdoc, and binding-source-size measurements.
+- Documented every public item and added an explicit `# Safety` contract to
+  every exported FFI function.
 
 ## 0.1.1 - 2026-08-27
 

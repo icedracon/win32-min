@@ -21,8 +21,11 @@ use core::ffi::c_void;
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct LSA_STRING {
+    /// Current byte length, excluding any terminator.
     pub Length: u16,
+    /// Capacity in bytes.
     pub MaximumLength: u16,
+    /// Borrowed pointer to ANSI bytes.
     pub Buffer: *mut u8,
 }
 
@@ -59,10 +62,22 @@ impl LSA_STRING {
 extern "system" {
     /// `LsaConnectUntrusted` — connect to LSA without registering a logon process.
     /// Sufficient for read + submit operations against auth packages.
+    ///
+    /// # Safety
+    ///
+    /// `LsaHandle` must point to writable handle storage. On success the
+    /// returned handle is owned and must be passed once to
+    /// [`LsaDeregisterLogonProcess`].
     pub fn LsaConnectUntrusted(LsaHandle: *mut HANDLE) -> NTSTATUS;
 
     /// `LsaLookupAuthenticationPackage` — resolve an ANSI package name to its
     /// numeric ID (out-param). Values are stable per boot session.
+    ///
+    /// # Safety
+    ///
+    /// The LSA handle must be valid, `PackageName` must point to a readable
+    /// counted string whose buffer remains alive for the call, and
+    /// `AuthenticationPackage` must be writable.
     pub fn LsaLookupAuthenticationPackage(
         LsaHandle: HANDLE,
         PackageName: *const LSA_STRING,
@@ -77,6 +92,13 @@ extern "system" {
     ///   freed with `LsaFreeReturnBuffer`.
     /// - `ProtocolStatus` receives the package-level status code (distinct from
     ///   the transport-level `NTSTATUS` return).
+    ///
+    /// # Safety
+    ///
+    /// The LSA handle and package ID must be valid. The submit pointer must be
+    /// readable for `SubmitBufferLength` bytes with the package-specific ABI.
+    /// All three outputs must be writable. Every non-null returned buffer is
+    /// owned and must be released with [`LsaFreeReturnBuffer`].
     pub fn LsaCallAuthenticationPackage(
         LsaHandle: HANDLE,
         AuthenticationPackage: u32,
@@ -89,11 +111,21 @@ extern "system" {
 
     /// `LsaDeregisterLogonProcess` — close an LSA handle from
     /// `LsaConnectUntrusted` / `LsaRegisterLogonProcess`.
+    ///
+    /// # Safety
+    ///
+    /// `LsaHandle` must be a valid uniquely owned LSA handle that has not
+    /// already been deregistered.
     pub fn LsaDeregisterLogonProcess(LsaHandle: HANDLE) -> NTSTATUS;
 
     /// `LsaFreeReturnBuffer` — free an LSA-allocated buffer returned via
     /// `LsaCallAuthenticationPackage`. Must be called for every non-null
     /// return-buffer to avoid leaking LSA memory.
+    ///
+    /// # Safety
+    ///
+    /// `Buffer` must be a non-null uniquely owned allocation returned by LSA,
+    /// and it must not already have been released.
     pub fn LsaFreeReturnBuffer(Buffer: *mut c_void) -> NTSTATUS;
 }
 

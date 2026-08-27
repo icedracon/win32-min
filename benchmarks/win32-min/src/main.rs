@@ -1,4 +1,4 @@
 fn main() {
-    let pid = unsafe { win32_min::process_thread::GetCurrentProcessId() };
+    let pid = unsafe { win32_min::process::GetCurrentProcessId() };
     println!("{pid}");
 }

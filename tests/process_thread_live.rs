@@ -1,16 +1,18 @@
-#![cfg(all(windows, feature = "process-thread"))]
+#![cfg(all(windows, feature = "process", feature = "thread"))]
 
 use std::mem::{size_of, zeroed};
 use std::process::{Child, Command};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{mpsc, Arc};
 
 use win32_min::foundation::{CloseHandle, GetLastError, SetLastError, INVALID_HANDLE_VALUE};
 use win32_min::process_thread::{
     CreateToolhelp32Snapshot, GetCurrentProcess, GetCurrentProcessId, GetCurrentThread,
     GetCurrentThreadId, GetExitCodeProcess, GetProcessId, GetThreadId, OpenProcess, OpenThread,
-    Process32FirstW, Process32NextW, QueryFullProcessImageNameW, TerminateProcess, Thread32First,
-    Thread32Next, PROCESSENTRY32W, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_TERMINATE,
-    STILL_ACTIVE, TH32CS_SNAPPROCESS, TH32CS_SNAPTHREAD, THREADENTRY32,
-    THREAD_QUERY_LIMITED_INFORMATION,
+    Process32FirstW, Process32NextW, QueryFullProcessImageNameW, ResumeThread, SuspendThread,
+    TerminateProcess, Thread32First, Thread32Next, PROCESSENTRY32W,
+    PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_TERMINATE, STILL_ACTIVE, TH32CS_SNAPPROCESS,
+    TH32CS_SNAPTHREAD, THREADENTRY32, THREAD_QUERY_LIMITED_INFORMATION, THREAD_SUSPEND_RESUME,
 };
 
 struct ChildGuard(Option<Child>);
@@ -22,6 +24,33 @@ impl Drop for ChildGuard {
             let _ = child.wait();
         }
     }
+}
+
+#[test]
+fn suspends_and_resumes_only_a_test_owned_thread() {
+    let stop = Arc::new(AtomicBool::new(false));
+    let worker_stop = Arc::clone(&stop);
+    let (sender, receiver) = mpsc::channel();
+    let worker = std::thread::spawn(move || {
+        sender.send(unsafe { GetCurrentThreadId() }).unwrap();
+        while !worker_stop.load(Ordering::Acquire) {
+            std::hint::spin_loop();
+        }
+    });
+    let thread_id = receiver.recv().unwrap();
+    let handle = unsafe {
+        OpenThread(
+            THREAD_SUSPEND_RESUME | THREAD_QUERY_LIMITED_INFORMATION,
+            0,
+            thread_id,
+        )
+    };
+    assert!(!handle.is_null());
+    assert_ne!(unsafe { SuspendThread(handle) }, u32::MAX);
+    assert_ne!(unsafe { ResumeThread(handle) }, u32::MAX);
+    stop.store(true, Ordering::Release);
+    worker.join().unwrap();
+    assert_ne!(unsafe { CloseHandle(handle) }, 0);
 }
 
 #[test]

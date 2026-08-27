@@ -1,4 +1,4 @@
-#![cfg(all(windows, feature = "security-descriptor"))]
+#![cfg(all(windows, feature = "security"))]
 
 use std::fs::{File, OpenOptions};
 use std::os::windows::ffi::OsStrExt;
@@ -7,13 +7,14 @@ use std::os::windows::io::AsRawHandle;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use win32_min::foundation::{HANDLE, PCWSTR, PWSTR};
+use win32_min::foundation::{BOOL, HANDLE, PCWSTR, PWSTR};
 use win32_min::security_descriptor::{
     ConvertSecurityDescriptorToStringSecurityDescriptorW,
     ConvertStringSecurityDescriptorToSecurityDescriptorW, GetNamedSecurityInfoW,
-    GetSecurityDescriptorLength, GetSecurityInfo, IsValidSecurityDescriptor, LocalFree,
-    SetNamedSecurityInfoW, SetSecurityInfo, DACL_SECURITY_INFORMATION, NULL_SECURITY_DESCRIPTOR,
-    SDDL_REVISION_1, SE_OBJECT_TYPE,
+    GetSecurityDescriptorDacl, GetSecurityDescriptorGroup, GetSecurityDescriptorLength,
+    GetSecurityDescriptorOwner, GetSecurityDescriptorSacl, GetSecurityInfo,
+    IsValidSecurityDescriptor, LocalFree, SetNamedSecurityInfoW, SetSecurityInfo,
+    DACL_SECURITY_INFORMATION, NULL_SECURITY_DESCRIPTOR, SDDL_REVISION_1, SE_OBJECT_TYPE,
 };
 
 const ERROR_SUCCESS: u32 = 0;
@@ -37,7 +38,7 @@ impl Drop for TempFileCleanup {
 
 #[test]
 fn sddl_conversion_round_trip_and_local_free() {
-    let sddl = wide("O:SYG:SYD:(A;;GR;;;WD)");
+    let sddl = wide("O:SYG:SYD:(A;;0x00120089;;;WD)");
     let mut descriptor = NULL_SECURITY_DESCRIPTOR;
     let mut descriptor_len = 0u32;
     assert_ne!(
@@ -57,6 +58,52 @@ fn sddl_conversion_round_trip_and_local_free() {
         unsafe { GetSecurityDescriptorLength(descriptor) },
         descriptor_len
     );
+
+    let mut owner = std::ptr::null_mut();
+    let mut owner_defaulted: BOOL = 0;
+    assert_ne!(
+        unsafe { GetSecurityDescriptorOwner(descriptor, &mut owner, &mut owner_defaulted) },
+        0
+    );
+    assert!(!owner.is_null());
+    let mut group = std::ptr::null_mut();
+    let mut group_defaulted: BOOL = 0;
+    assert_ne!(
+        unsafe { GetSecurityDescriptorGroup(descriptor, &mut group, &mut group_defaulted) },
+        0
+    );
+    assert!(!group.is_null());
+    let mut dacl_present: BOOL = 0;
+    let mut dacl_defaulted: BOOL = 0;
+    let mut dacl = std::ptr::null_mut();
+    assert_ne!(
+        unsafe {
+            GetSecurityDescriptorDacl(
+                descriptor,
+                &mut dacl_present,
+                &mut dacl,
+                &mut dacl_defaulted,
+            )
+        },
+        0
+    );
+    assert_ne!(dacl_present, 0);
+    assert!(!dacl.is_null());
+    let mut sacl_present: BOOL = 0;
+    let mut sacl_defaulted: BOOL = 0;
+    let mut sacl = std::ptr::null_mut();
+    assert_ne!(
+        unsafe {
+            GetSecurityDescriptorSacl(
+                descriptor,
+                &mut sacl_present,
+                &mut sacl,
+                &mut sacl_defaulted,
+            )
+        },
+        0
+    );
+    assert_eq!(sacl_present, 0);
 
     let mut rendered = PWSTR::NULL;
     let mut rendered_len = 0u32;
@@ -83,6 +130,139 @@ fn sddl_conversion_round_trip_and_local_free() {
 
     assert!(unsafe { LocalFree(rendered.0.cast()) }.is_null());
     assert!(unsafe { LocalFree(descriptor) }.is_null());
+}
+
+#[cfg(feature = "security-token")]
+#[test]
+fn access_check_with_test_owned_impersonation_token() {
+    use win32_min::foundation::{CloseHandle, GetLastError, SetLastError};
+    use win32_min::security_descriptor::{
+        AccessCheck, InitializeSecurityDescriptor, SetSecurityDescriptorDacl,
+        SetSecurityDescriptorGroup, SetSecurityDescriptorOwner, GENERIC_MAPPING, PRIVILEGE_SET,
+        SECURITY_DESCRIPTOR,
+    };
+    use win32_min::security_token::{
+        DuplicateTokenEx, GetCurrentProcess, OpenProcessToken, SECURITY_IMPERSONATION_LEVEL,
+        TOKEN_DUPLICATE, TOKEN_QUERY, TOKEN_TYPE,
+    };
+
+    let mut primary = std::ptr::null_mut();
+    assert_ne!(
+        unsafe {
+            OpenProcessToken(
+                GetCurrentProcess(),
+                TOKEN_QUERY | TOKEN_DUPLICATE,
+                &mut primary,
+            )
+        },
+        0
+    );
+    let mut impersonation = std::ptr::null_mut();
+    assert_ne!(
+        unsafe {
+            DuplicateTokenEx(
+                primary,
+                TOKEN_QUERY,
+                std::ptr::null(),
+                SECURITY_IMPERSONATION_LEVEL::SecurityImpersonation,
+                TOKEN_TYPE::TokenImpersonation,
+                &mut impersonation,
+            )
+        },
+        0
+    );
+
+    let sddl = wide("O:SYG:SYD:(A;;GR;;;WD)");
+    let mut descriptor = NULL_SECURITY_DESCRIPTOR;
+    assert_ne!(
+        unsafe {
+            ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                PCWSTR(sddl.as_ptr()),
+                SDDL_REVISION_1,
+                &mut descriptor,
+                std::ptr::null_mut(),
+            )
+        },
+        0
+    );
+
+    let mut dacl_present: BOOL = 0;
+    let mut dacl_defaulted: BOOL = 0;
+    let mut dacl = std::ptr::null_mut();
+    assert_ne!(
+        unsafe {
+            GetSecurityDescriptorDacl(
+                descriptor,
+                &mut dacl_present,
+                &mut dacl,
+                &mut dacl_defaulted,
+            )
+        },
+        0
+    );
+    let mut absolute: SECURITY_DESCRIPTOR = unsafe { core::mem::zeroed() };
+    let absolute_ptr = (&mut absolute as *mut SECURITY_DESCRIPTOR).cast();
+    assert_ne!(unsafe { InitializeSecurityDescriptor(absolute_ptr, 1) }, 0);
+    // A present-but-null DACL grants all access. Use it here so this test
+    // isolates AccessCheck's token and absolute-descriptor contract from ACE
+    // ordering or object-specific rights semantics.
+    assert_ne!(
+        unsafe { SetSecurityDescriptorDacl(absolute_ptr, 1, std::ptr::null_mut(), 0) },
+        0
+    );
+    let mut owner = std::ptr::null_mut();
+    let mut owner_defaulted: BOOL = 0;
+    assert_ne!(
+        unsafe { GetSecurityDescriptorOwner(descriptor, &mut owner, &mut owner_defaulted) },
+        0
+    );
+    assert_ne!(
+        unsafe { SetSecurityDescriptorOwner(absolute_ptr, owner, owner_defaulted) },
+        0
+    );
+    let mut group = std::ptr::null_mut();
+    let mut group_defaulted: BOOL = 0;
+    assert_ne!(
+        unsafe { GetSecurityDescriptorGroup(descriptor, &mut group, &mut group_defaulted) },
+        0
+    );
+    assert_ne!(
+        unsafe { SetSecurityDescriptorGroup(absolute_ptr, group, group_defaulted) },
+        0
+    );
+    assert_ne!(unsafe { IsValidSecurityDescriptor(absolute_ptr) }, 0);
+
+    let mut mapping = GENERIC_MAPPING {
+        GenericRead: 0x0012_0089,
+        GenericWrite: 0x0012_0116,
+        GenericExecute: 0x0012_00a0,
+        GenericAll: 0x001f_01ff,
+    };
+    let mut privileges: PRIVILEGE_SET = unsafe { core::mem::zeroed() };
+    let mut privilege_len = core::mem::size_of::<PRIVILEGE_SET>() as u32;
+    let mut granted = 0u32;
+    let mut access_status: BOOL = 0;
+    let desired_access = mapping.GenericRead;
+    unsafe { SetLastError(0) };
+    let ok = unsafe {
+        AccessCheck(
+            absolute_ptr,
+            impersonation,
+            desired_access,
+            &mut mapping,
+            &mut privileges,
+            &mut privilege_len,
+            &mut granted,
+            &mut access_status,
+        )
+    };
+    assert_ne!(ok, 0, "AccessCheck failed: {}", unsafe { GetLastError() });
+    assert_ne!(access_status, 0);
+    assert_eq!(granted & mapping.GenericRead, mapping.GenericRead);
+
+    assert!(unsafe { LocalFree(descriptor) }.is_null());
+    assert_ne!(unsafe { CloseHandle(impersonation) }, 0);
+    assert_ne!(unsafe { CloseHandle(primary) }, 0);
 }
 
 #[test]

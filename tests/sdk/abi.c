@@ -35,6 +35,20 @@ ABI_ASSERT(service_status_process_pid_offset,
 ABI_ASSERT(thread_entry_size, sizeof(THREADENTRY32) == 28);
 ABI_ASSERT(thread_entry_id_offset, offsetof(THREADENTRY32, th32ThreadID) == 8);
 ABI_ASSERT(thread_entry_flags_offset, offsetof(THREADENTRY32, dwFlags) == 24);
+ABI_ASSERT(process_information_process_id_offset,
+           offsetof(PROCESS_INFORMATION, dwProcessId) == (sizeof(void *) * 2));
+
+ABI_ASSERT(file_attribute_data_size,
+           sizeof(WIN32_FILE_ATTRIBUTE_DATA) == 36);
+ABI_ASSERT(file_attribute_size_high_offset,
+           offsetof(WIN32_FILE_ATTRIBUTE_DATA, nFileSizeHigh) == 28);
+ABI_ASSERT(by_handle_file_information_size,
+           sizeof(BY_HANDLE_FILE_INFORMATION) == 52);
+ABI_ASSERT(by_handle_file_index_low_offset,
+           offsetof(BY_HANDLE_FILE_INFORMATION, nFileIndexLow) == 48);
+ABI_ASSERT(open_existing_value, OPEN_EXISTING == 3);
+ABI_ASSERT(file_open_reparse_value,
+           FILE_FLAG_OPEN_REPARSE_POINT == 0x00200000);
 
 ABI_ASSERT(acl_size, sizeof(ACL) == 8);
 ABI_ASSERT(acl_ace_count_offset, offsetof(ACL, AceCount) == 4);
@@ -47,6 +61,11 @@ ABI_ASSERT(sd_relative_dacl_offset,
 ABI_ASSERT(se_self_relative_value, SE_SELF_RELATIVE == 0x8000);
 ABI_ASSERT(dacl_security_information_value,
            DACL_SECURITY_INFORMATION == 0x00000004);
+ABI_ASSERT(access_allowed_ace_size, sizeof(ACCESS_ALLOWED_ACE) == 12);
+ABI_ASSERT(access_denied_ace_size, sizeof(ACCESS_DENIED_ACE) == 12);
+ABI_ASSERT(generic_mapping_size, sizeof(GENERIC_MAPPING) == 16);
+ABI_ASSERT(privilege_set_size, sizeof(PRIVILEGE_SET) == 20);
+ABI_ASSERT(sid_size, sizeof(SID) == 12);
 
 ABI_ASSERT(key_read_value, KEY_READ == 0x00020019);
 ABI_ASSERT(key_all_access_value, KEY_ALL_ACCESS == 0x000F003F);
@@ -63,6 +82,10 @@ ABI_ASSERT(process_entry_heap_offset_x64,
            offsetof(PROCESSENTRY32W, th32DefaultHeapID) == 16);
 ABI_ASSERT(process_entry_name_offset_x64,
            offsetof(PROCESSENTRY32W, szExeFile) == 44);
+ABI_ASSERT(process_information_size_x64, sizeof(PROCESS_INFORMATION) == 24);
+ABI_ASSERT(security_descriptor_size_x64, sizeof(SECURITY_DESCRIPTOR) == 40);
+ABI_ASSERT(security_descriptor_owner_offset_x64,
+           offsetof(SECURITY_DESCRIPTOR, Owner) == 8);
 ABI_ASSERT(enum_service_status_size_x64,
            sizeof(ENUM_SERVICE_STATUS_PROCESSW) == 56);
 ABI_ASSERT(lsa_string_size_x64, sizeof(LSA_STRING) == 16);
@@ -76,6 +99,10 @@ ABI_ASSERT(process_entry_heap_offset_x86,
            offsetof(PROCESSENTRY32W, th32DefaultHeapID) == 12);
 ABI_ASSERT(process_entry_name_offset_x86,
            offsetof(PROCESSENTRY32W, szExeFile) == 36);
+ABI_ASSERT(process_information_size_x86, sizeof(PROCESS_INFORMATION) == 16);
+ABI_ASSERT(security_descriptor_size_x86, sizeof(SECURITY_DESCRIPTOR) == 20);
+ABI_ASSERT(security_descriptor_owner_offset_x86,
+           offsetof(SECURITY_DESCRIPTOR, Owner) == 4);
 ABI_ASSERT(enum_service_status_size_x86,
            sizeof(ENUM_SERVICE_STATUS_PROCESSW) == 44);
 ABI_ASSERT(lsa_string_size_x86, sizeof(LSA_STRING) == 8);
