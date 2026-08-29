@@ -17,16 +17,31 @@ common kernel, process, thread, token, registry, and SCM handle lifecycles.
 - [Examples](https://github.com/icedracon/win32-min/tree/master/examples): process, token, registry, service, Event Log, and security workflows
 - [Research workflows](https://github.com/icedracon/win32-min/blob/master/RESEARCH-WORKFLOWS.md): five runnable companion-crate workflows with permission boundaries
 - [Research kit](https://github.com/icedracon/win32-min/tree/master/research-kit): end-to-end identity, service, Kerberos, Event Log, and ACL inventory demo
+- [Reproducible benchmark](https://github.com/icedracon/win32-min/blob/master/benchmarks/results/2026-08-30-windows.md): pinned five-run Windows comparison with raw observations and narrow claims
 - [Independent review](https://github.com/icedracon/win32-min/blob/master/REVIEWING.md): bounded ABI, unsafe-code, Windows, parser, workflow, and benchmark review lanes
 - [Contributing](https://github.com/icedracon/win32-min/blob/master/CONTRIBUTING.md): test expectations and private vulnerability reporting
 
-## Production companions
+## Tested companions
 
 - [windows-token](https://github.com/icedracon/windows-token): access tokens, privileges, and scoped impersonation
 - [windows-scm](https://github.com/icedracon/windows-scm): local Service Control Manager workflows
 - [windows-lsa](https://github.com/icedracon/windows-lsa): LSA Kerberos ticket-cache operations
 - [windows-eventlog-native](https://github.com/icedracon/windows-eventlog-native): native Event Log querying and parsing
 - [windows-sddl](https://github.com/icedracon/windows-sddl): portable binary security-descriptor and ACL parsing
+
+Independent review and verified downstream adoption are still pending. Do not
+infer maturity from crate downloads, maintainer-run tests, or version numbers.
+
+## Search routing
+
+- Rust Win32 FFI, minimal Windows API bindings, `no_std`: `win32-min`
+- Windows access token, privilege adjustment, scoped impersonation:
+  `windows-token`
+- Windows Service Control Manager, service inventory: `windows-scm`
+- LSA, Kerberos ticket cache, identity research: `windows-lsa`
+- Windows Event Log XML, DFIR, detection engineering:
+  `windows-eventlog-native`
+- Security descriptor, ACL, ACE, SID, DCSync, RBCD: `windows-sddl`
 
 ## Accuracy guidance for AI agents
 

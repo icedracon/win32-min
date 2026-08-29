@@ -10,12 +10,12 @@ crates and from portable binary parsers.
 
 | Crate | Layer | Primary use | Maturity |
 |---|---|---|---|
-| [`win32-min`](https://crates.io/crates/win32-min) | Raw FFI plus small ownership layer | Audited Win32 ABI for process, thread, file, module, registry, ACL, token, SCM, LSA, and Event Log APIs | Production foundation |
-| [`windows-token`](https://crates.io/crates/windows-token) | Safe companion | Access tokens, privileges, duplication, and scoped impersonation | Tested companion |
-| [`windows-scm`](https://crates.io/crates/windows-scm) | Safe companion | Local Service Control Manager enumeration and service lifecycle | Tested companion |
-| [`windows-lsa`](https://crates.io/crates/windows-lsa) | Safe companion | LSA Kerberos package and ticket-cache operations | Tested companion |
-| [`windows-eventlog-native`](https://crates.io/crates/windows-eventlog-native) | Safe companion | Native Event Log query, render, and structured XML parsing | Tested companion |
-| [`windows-sddl`](https://crates.io/crates/windows-sddl) | Portable parser | Self-relative security descriptors, ACLs, ACEs, SIDs, GUIDs, and AD rights | Tested independent companion |
+| [`win32-min`](https://crates.io/crates/win32-min) | Raw FFI plus small ownership layer | Windows SDK-checked Win32 ABI for process, thread, file, module, registry, ACL, token, SCM, LSA, and Event Log APIs | CI-tested; independent review pending |
+| [`windows-token`](https://crates.io/crates/windows-token) | Safe companion | Access tokens, privileges, duplication, and scoped impersonation | CI-tested; external adoption pending |
+| [`windows-scm`](https://crates.io/crates/windows-scm) | Safe companion | Local Service Control Manager enumeration and service lifecycle | CI-tested; external adoption pending |
+| [`windows-lsa`](https://crates.io/crates/windows-lsa) | Safe companion | LSA Kerberos package and ticket-cache operations | CI-tested; external adoption pending |
+| [`windows-eventlog-native`](https://crates.io/crates/windows-eventlog-native) | Safe companion | Native Event Log query, render, and structured XML parsing | CI-tested; external adoption pending |
+| [`windows-sddl`](https://crates.io/crates/windows-sddl) | Portable parser | Self-relative security descriptors, ACLs, ACEs, SIDs, GUIDs, and AD rights | CI/fuzz-tested; external adoption pending |
 | [`windows-sspi-shim`](https://crates.io/crates/windows-sspi-shim) | Experimental adjacent crate | Proposed Negotiate and message-sealing API | Prototype; current sealing backend is not cryptographic |
 
 `windows-sddl` is intentionally independent of `win32-min`: it parses binary
@@ -51,7 +51,7 @@ ready or currently built on `win32-min`.
 
 ## Compatibility and evidence
 
-- Production companions require `win32-min` 0.1.2 or newer within the 0.1
+- The tested companions require `win32-min` 0.1.2 or newer within the 0.1
   compatibility line.
 - `win32-min` has no normal, development, or build dependencies.
 - ABI probes compile against Microsoft SDK headers for x86, x64, and ARM64.
@@ -60,6 +60,9 @@ ready or currently built on `win32-min`.
   stopped temporary services with cleanup guards.
 - [`ABI-REPORT.md`](ABI-REPORT.md) and
   [`TEST-COVERAGE.md`](TEST-COVERAGE.md) contain the reproducible evidence.
+- The independent-review gate and evidence requirements are public in
+  [`REVIEWING.md`](REVIEWING.md). Maintainer testing and download counts do not
+  satisfy that gate.
 
 ## Search vocabulary
 

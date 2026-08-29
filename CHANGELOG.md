@@ -17,6 +17,8 @@ All notable changes to this project are documented here.
   published Windows baseline.
 - Added contributor guidance, a structured independent-review protocol and
   issue form, plus private vulnerability reporting on GitHub.
+- Added research citation metadata and evidence-scoped search routing for
+  researchers and AI agents; clarified that independent adoption is pending.
 
 ## 0.1.3 - 2026-08-29
 

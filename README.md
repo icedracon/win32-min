@@ -18,16 +18,19 @@ zero-dependency ownership layer handles the easy-to-get-wrong close functions
 for kernel, process, thread, token, registry, and SCM handles; policy and
 higher-level behavior remain in focused companion crates.
 
-## Why
+## Why a curated binding layer
 
-- **`windows-rs`** — official Microsoft, correct + comprehensive, but 100+ MB
-  artifacts, feature-flag puzzle, and version churn (0.48 → 0.51 → 0.58 → 0.61)
-  creates dep-graph duplication in binaries that pull multiple `windows-rs`-
-  based crates. Use it for COM (which this crate does not cover).
-- **`winapi`** — deprecated de-facto since 2021.
-- **`win32-min`** — pure `extern "system"` declarations + `#[repr(C)]` structs,
-  feature-gated by subsystem. Zero deps, sub-second cold compile, no version
-  drift for you or your consumers.
+The Microsoft `windows` and `windows-sys` crates provide broad generated API
+coverage and remain the right default when an application needs large parts of
+the Windows SDK, WinRT, or COM. `win32-min` instead keeps a reviewed subset of
+security and administration declarations behind subsystem features, using pure
+`extern "system"` declarations and `#[repr(C)]` structures with zero crate
+dependencies.
+
+The dated [Windows benchmark](benchmarks/results/2026-08-30-windows.md) shows
+the resulting dependency and clean-target build differences for one tiny
+process-ID program. It is deliberately a narrow measurement, not a universal
+performance or quality claim.
 
 ## Features
 
@@ -139,8 +142,9 @@ The [`benchmarks`](benchmarks) directory builds the same tiny process-ID program
 with `win32-min`, `windows-sys`, and `windows`. Run `benchmarks/compare.ps1` from
 PowerShell to produce a local CSV containing cold and incremental build time,
 rustdoc time, binary size, dependency count, and binding-source size. Results
-are generated locally rather than hard-coded because hardware, toolchain, and
-cache state materially affect them.
+remain machine-specific because hardware, toolchain, and cache state materially
+affect them. A five-run [published baseline](benchmarks/results/2026-08-30-windows.md)
+and its raw CSV are checked in for audit and reproduction.
 
 ## Non-goals
 

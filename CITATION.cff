@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If this software supports your research, please cite the version you used."
+title: "win32-min: minimal Rust Win32 FFI for security research and DFIR"
+type: software
+authors:
+  - family-names: Saroyan
+    given-names: Zorayr
+repository-code: "https://github.com/icedracon/win32-min"
+url: "https://crates.io/crates/win32-min"
+version: 0.1.3
+date-released: 2026-08-29
+license: MIT
+keywords:
+  - Rust
+  - Win32
+  - Windows security
+  - DFIR
+  - digital forensics
+  - detection engineering
+  - FFI
