@@ -1,4 +1,7 @@
 target/
 Cargo.lock
 !research-kit/Cargo.lock
+!benchmarks/win32-min/Cargo.lock
+!benchmarks/windows-sys/Cargo.lock
+!benchmarks/windows/Cargo.lock
 benchmarks/results.csv

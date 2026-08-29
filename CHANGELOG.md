@@ -12,6 +12,9 @@ All notable changes to this project are documented here.
   root package, research kit, and GitHub Actions.
 - Updated the research kit to `windows-eventlog-native` 0.2.2 and
   `quick-xml` 0.41, removing two high-severity RustSec advisories.
+- Made the three-crate comparison reproducible with committed lockfiles,
+  rotating build order, raw timing observations, variance, and an openly
+  published Windows baseline.
 
 ## 0.1.3 - 2026-08-29
 

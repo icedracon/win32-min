@@ -1,12 +1,18 @@
 param(
-    [ValidateRange(1, 20)]
-    [int]$Runs = 3
+    [ValidateRange(3, 20)]
+    [int]$Runs = 5
 )
 
 $ErrorActionPreference = 'Stop'
 $benchmarkRoot = [IO.Path]::GetFullPath($PSScriptRoot)
 $variants = @('win32-min', 'windows-sys', 'windows')
 $results = @()
+$coldDurations = @{}
+$timestampUtc = [DateTimeOffset]::UtcNow.ToString('o')
+$rustcVersion = (rustc --version)
+$cargoVersion = (cargo --version)
+$hostDescription = [Runtime.InteropServices.RuntimeInformation]::OSDescription
+$cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty Name).Trim()
 
 function Remove-ExactDirectory {
     param(
@@ -29,44 +35,68 @@ function Remove-ExactDirectory {
 foreach ($variant in $variants) {
     $variantRoot = [IO.Path]::GetFullPath((Join-Path $benchmarkRoot $variant))
     $manifest = Join-Path $variantRoot 'Cargo.toml'
-    $targetDir = Join-Path $variantRoot 'target'
-    $packageName = "bench-$variant"
-    $coldDurations = @()
+    cargo fetch --locked --manifest-path $manifest
+    if ($LASTEXITCODE -ne 0) {
+        throw "Dependency prefetch failed for $variant."
+    }
+    $coldDurations[$variant] = @()
+}
 
-    for ($run = 1; $run -le $Runs; $run++) {
+# Rotate the order every run so no binding always benefits from going first or
+# suffers from going last. "Clean-target" deliberately means Cargo artifacts
+# are removed while the registry and operating-system file caches stay warm.
+for ($run = 0; $run -lt $Runs; $run++) {
+    for ($offset = 0; $offset -lt $variants.Count; $offset++) {
+        $variant = $variants[($run + $offset) % $variants.Count]
+        $variantRoot = [IO.Path]::GetFullPath((Join-Path $benchmarkRoot $variant))
+        $manifest = Join-Path $variantRoot 'Cargo.toml'
+        $targetDir = Join-Path $variantRoot 'target'
         Remove-ExactDirectory -Path $targetDir -ExpectedParent $variantRoot
 
         $timer = [Diagnostics.Stopwatch]::StartNew()
-        cargo build --release --manifest-path $manifest
+        cargo build --release --locked --manifest-path $manifest
         if ($LASTEXITCODE -ne 0) {
-            throw "Cold benchmark build failed for $variant."
+            throw "Clean-target benchmark build failed for $variant."
         }
         $timer.Stop()
-        $coldDurations += $timer.Elapsed.TotalSeconds
+        $coldDurations[$variant] += $timer.Elapsed.TotalSeconds
     }
+}
 
-    cargo clean --manifest-path $manifest -p $packageName
-    if ($LASTEXITCODE -ne 0) {
-        throw "Application-only clean failed for $variant."
+foreach ($variant in $variants) {
+    $variantRoot = [IO.Path]::GetFullPath((Join-Path $benchmarkRoot $variant))
+    $manifest = Join-Path $variantRoot 'Cargo.toml'
+    $targetDir = Join-Path $variantRoot 'target'
+    $packageName = "bench-$variant"
+
+    $applicationSource = Join-Path $variantRoot 'src\main.rs'
+    $originalWriteTimeUtc = (Get-Item -LiteralPath $applicationSource).LastWriteTimeUtc
+    try {
+        # Cargo's dependency artifacts remain cached, but a newer source mtime
+        # forces the tiny application package itself to rebuild.
+        (Get-Item -LiteralPath $applicationSource).LastWriteTimeUtc = [DateTime]::UtcNow.AddSeconds(1)
+        $timer = [Diagnostics.Stopwatch]::StartNew()
+        cargo build --release --locked --manifest-path $manifest
+        if ($LASTEXITCODE -ne 0) {
+            throw "Incremental benchmark build failed for $variant."
+        }
+        $timer.Stop()
+        $incrementalSeconds = $timer.Elapsed.TotalSeconds
     }
-    $timer = [Diagnostics.Stopwatch]::StartNew()
-    cargo build --release --manifest-path $manifest
-    if ($LASTEXITCODE -ne 0) {
-        throw "Incremental benchmark build failed for $variant."
+    finally {
+        (Get-Item -LiteralPath $applicationSource).LastWriteTimeUtc = $originalWriteTimeUtc
     }
-    $timer.Stop()
-    $incrementalSeconds = $timer.Elapsed.TotalSeconds
 
     Remove-ExactDirectory -Path (Join-Path $targetDir 'doc') -ExpectedParent $targetDir
     $timer = [Diagnostics.Stopwatch]::StartNew()
-    cargo doc --release --no-deps --manifest-path $manifest
+    cargo doc --release --no-deps --locked --manifest-path $manifest
     if ($LASTEXITCODE -ne 0) {
         throw "Rustdoc benchmark failed for $variant."
     }
     $timer.Stop()
     $rustdocSeconds = $timer.Elapsed.TotalSeconds
 
-    $metadata = cargo metadata --format-version 1 --manifest-path $manifest | ConvertFrom-Json
+    $metadata = cargo metadata --format-version 1 --locked --manifest-path $manifest | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0) {
         throw "cargo metadata failed for $variant."
     }
@@ -79,19 +109,34 @@ foreach ($variant in $variants) {
     $sourceFiles = Get-ChildItem -LiteralPath $bindingRoot -Recurse -File -Filter '*.rs' |
         Where-Object FullName -NotLike '*\target\*'
 
+    $coldMean = ($coldDurations[$variant] | Measure-Object -Average).Average
+    $squaredDifferences = $coldDurations[$variant] | ForEach-Object {
+        [math]::Pow($_ - $coldMean, 2)
+    }
+    $coldStandardDeviation = [math]::Sqrt(
+        ($squaredDifferences | Measure-Object -Sum).Sum / ($Runs - 1)
+    )
     $binary = Join-Path $targetDir "release\$packageName.exe"
     $results += [pscustomobject]@{
         variant = $variant
+        binding_version = $bindingPackage.version
         runs = $Runs
-        cold_build_seconds_mean = [math]::Round(($coldDurations | Measure-Object -Average).Average, 3)
+        clean_target_build_seconds_mean = [math]::Round($coldMean, 3)
+        clean_target_build_seconds_sample_stddev = [math]::Round($coldStandardDeviation, 3)
+        clean_target_build_seconds_raw = (($coldDurations[$variant] | ForEach-Object {
+            $_.ToString('0.000', [Globalization.CultureInfo]::InvariantCulture)
+        }) -join ';')
         incremental_rebuild_seconds = [math]::Round($incrementalSeconds, 3)
         rustdoc_seconds = [math]::Round($rustdocSeconds, 3)
         executable_bytes = (Get-Item -LiteralPath $binary).Length
         dependency_package_count = $metadata.packages.Count - 1
         binding_source_files = $sourceFiles.Count
         binding_source_bytes = ($sourceFiles | Measure-Object Length -Sum).Sum
-        rustc = (rustc --version)
-        host = [Runtime.InteropServices.RuntimeInformation]::OSDescription
+        timestamp_utc = $timestampUtc
+        rustc = $rustcVersion
+        cargo = $cargoVersion
+        host = $hostDescription
+        cpu = $cpu
     }
 }
 
