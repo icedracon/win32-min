@@ -1,0 +1,36 @@
+name: Supply chain
+
+on:
+  push:
+    paths:
+      - Cargo.toml
+      - research-kit/Cargo.toml
+      - research-kit/Cargo.lock
+      - .github/workflows/supply-chain.yml
+  pull_request:
+    paths:
+      - Cargo.toml
+      - research-kit/Cargo.toml
+      - research-kit/Cargo.lock
+      - .github/workflows/supply-chain.yml
+  schedule:
+    - cron: "19 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install pinned cargo-audit
+        run: cargo install cargo-audit --locked --version 0.22.2
+      - name: Audit zero-dependency package lock
+        run: |
+          cargo generate-lockfile
+          cargo audit
+      - name: Audit research-kit lock
+        run: cargo audit --file research-kit/Cargo.lock
