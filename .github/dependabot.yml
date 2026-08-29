@@ -8,6 +8,18 @@ updates:
     directory: /research-kit
     schedule:
       interval: weekly
+  - package-ecosystem: cargo
+    directory: /benchmarks/win32-min
+    schedule:
+      interval: weekly
+  - package-ecosystem: cargo
+    directory: /benchmarks/windows-sys
+    schedule:
+      interval: weekly
+  - package-ecosystem: cargo
+    directory: /benchmarks/windows
+    schedule:
+      interval: weekly
   - package-ecosystem: github-actions
     directory: /
     schedule:

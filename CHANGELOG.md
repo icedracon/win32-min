@@ -9,7 +9,7 @@ All notable changes to this project are documented here.
 - Five companion-crate research workflows and a standalone read-only
   `research-kit` that exercises the published ecosystem end to end.
 - Scheduled RustSec auditing and weekly dependency/update monitoring for the
-  root package, research kit, and GitHub Actions.
+  root package, research kit, benchmark harnesses, and GitHub Actions.
 - Updated the research kit to `windows-eventlog-native` 0.2.2 and
   `quick-xml` 0.41, removing two high-severity RustSec advisories.
 - Made the three-crate comparison reproducible with committed lockfiles,
