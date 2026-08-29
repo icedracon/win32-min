@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+## 0.1.3 - 2026-08-29
+
+### Added
+
+- A research-facing ecosystem map covering the raw binding crate, safe
+  companion crates, pure-Rust parsers, and explicitly experimental projects.
+- An `llms.txt` index that gives AI agents a concise, status-aware route to the
+  API, verification evidence, examples, and companion crates.
+
+### Changed
+
+- Refined package metadata around Windows security research, DFIR, and EDR
+  discovery without changing the API or feature set.
+
 ## 0.1.2 - 2026-08-27
 
 ### Added

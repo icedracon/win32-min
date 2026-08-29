@@ -7,6 +7,10 @@
 Minimal, hand-rolled Win32 FFI for Windows security, administration, and audit
 tooling, packaged as one small crate with **zero runtime dependencies**.
 
+The broader crate family, maturity levels, compatibility policy, and research
+use cases are indexed in [`ECOSYSTEM.md`](ECOSYSTEM.md). AI agents and coding
+assistants can use [`llms.txt`](llms.txt) as the concise machine-readable map.
+
 The raw declarations mirror the Windows ABI and remain `unsafe`. A small
 zero-dependency ownership layer handles the easy-to-get-wrong close functions
 for kernel, process, thread, token, registry, and SCM handles; policy and

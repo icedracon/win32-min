@@ -1,17 +1,17 @@
 [package]
 name = "win32-min"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 rust-version = "1.74"
 authors = ["zevs"]
-description = "Minimal hand-rolled Win32 FFI for Windows security and administration tooling. Feature-gated, no_std, and dependency-free."
+description = "Minimal dependency-free Win32 FFI for Windows security research, DFIR, EDR, and administration tooling."
 license = "MIT"
 homepage = "https://github.com/icedracon/win32-min"
 repository = "https://github.com/icedracon/win32-min"
 documentation = "https://docs.rs/win32-min"
 readme = "README.md"
 exclude = ["/.github", "/benchmarks"]
-keywords = ["windows", "win32", "ffi", "no-std", "minimal"]
+keywords = ["windows", "win32", "ffi", "security", "dfir"]
 categories = ["os::windows-apis", "external-ffi-bindings", "no-std"]
 
 [features]
