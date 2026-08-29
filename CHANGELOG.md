@@ -19,6 +19,8 @@ All notable changes to this project are documented here.
   issue form, plus private vulnerability reporting on GitHub.
 - Added research citation metadata and evidence-scoped search routing for
   researchers and AI agents; clarified that independent adoption is pending.
+- Published explicit 90-day quality, independent-review/adoption, discovery,
+  and feedback-driven `0.2.0` release gates.
 
 ## 0.1.3 - 2026-08-29
 

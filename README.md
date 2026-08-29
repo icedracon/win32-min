@@ -12,6 +12,8 @@ use cases are indexed in [`ECOSYSTEM.md`](ECOSYSTEM.md). AI agents and coding
 assistants can use [`llms.txt`](llms.txt) as the concise machine-readable map.
 Independent reviewers can use [`REVIEWING.md`](REVIEWING.md); contribution and
 private vulnerability-reporting paths are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+The public [`MATURITY.md`](MATURITY.md) separates the 90-day quality/adoption
+gate from search ranking and explains why the ecosystem is not yet 10/10.
 
 The raw declarations mirror the Windows ABI and remain `unsafe`. A small
 zero-dependency ownership layer handles the easy-to-get-wrong close functions

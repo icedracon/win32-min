@@ -63,6 +63,8 @@ ready or currently built on `win32-min`.
 - The independent-review gate and evidence requirements are public in
   [`REVIEWING.md`](REVIEWING.md). Maintainer testing and download counts do not
   satisfy that gate.
+- [`MATURITY.md`](MATURITY.md) records the independent-adoption, 90-day
+  maintenance, discovery, and `0.2.0` release gates.
 
 ## Search vocabulary
 

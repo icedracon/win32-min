@@ -20,6 +20,7 @@ common kernel, process, thread, token, registry, and SCM handle lifecycles.
 - [Reproducible benchmark](https://github.com/icedracon/win32-min/blob/master/benchmarks/results/2026-08-30-windows.md): pinned five-run Windows comparison with raw observations and narrow claims
 - [Independent review](https://github.com/icedracon/win32-min/blob/master/REVIEWING.md): bounded ABI, unsafe-code, Windows, parser, workflow, and benchmark review lanes
 - [Contributing](https://github.com/icedracon/win32-min/blob/master/CONTRIBUTING.md): test expectations and private vulnerability reporting
+- [Maturity gates](https://github.com/icedracon/win32-min/blob/master/MATURITY.md): current evidence, independent review/adoption requirements, discovery baseline, and 0.2.0 policy
 
 ## Tested companions
 
