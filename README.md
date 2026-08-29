@@ -87,6 +87,13 @@ cargo run --example eventlog --features eventlog
 cargo run --example security --features security
 ```
 
+The companion crates add five higher-level, copy-paste workflows for current
+token identity, local service inventory, the Kerberos ticket cache, recent
+Security-channel events, and offline ACL analysis. Start with
+[`RESEARCH-WORKFLOWS.md`](RESEARCH-WORKFLOWS.md), or run the combined
+[`research-kit`](https://github.com/icedracon/win32-min/tree/master/research-kit)
+to exercise the public ecosystem in one process.
+
 ## ABI verification
 
 Hand-written bindings are only useful when they are demonstrably correct.

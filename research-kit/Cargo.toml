@@ -1,0 +1,21 @@
+[package]
+name = "win32-min-research-kit"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+publish = false
+description = "Read-only end-to-end demo of the win32-min Windows security ecosystem"
+license = "MIT"
+
+# Keep this demonstration crate independent from the parent package so its
+# published companion dependencies prove the public ecosystem works together.
+[workspace]
+
+[dependencies]
+windows-sddl = "0.1.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-token = "0.2.1"
+windows-scm = "0.2.1"
+windows-lsa = "0.2.1"
+windows-eventlog-native = "0.2.1"

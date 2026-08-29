@@ -10,7 +10,7 @@ homepage = "https://github.com/icedracon/win32-min"
 repository = "https://github.com/icedracon/win32-min"
 documentation = "https://docs.rs/win32-min"
 readme = "README.md"
-exclude = ["/.github", "/benchmarks"]
+exclude = ["/.github", "/benchmarks", "/research-kit"]
 keywords = ["windows", "win32", "ffi", "security", "dfir"]
 categories = ["os::windows-apis", "external-ffi-bindings", "no-std"]
 

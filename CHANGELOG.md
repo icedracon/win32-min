@@ -4,6 +4,11 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+### Added
+
+- Five companion-crate research workflows and a standalone read-only
+  `research-kit` that exercises the published ecosystem end to end.
+
 ## 0.1.3 - 2026-08-29
 
 ### Added

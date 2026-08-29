@@ -1,3 +1,4 @@
 target/
 Cargo.lock
+!research-kit/Cargo.lock
 benchmarks/results.csv
