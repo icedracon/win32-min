@@ -1,0 +1,66 @@
+name: Independent technical review
+description: Report a reproducible ABI, safety, Windows, workflow, or benchmark review.
+title: "[review]: "
+labels:
+  - help wanted
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for checking the project independently. Do not disclose a potential vulnerability here; use the repository's private **Security → Report a vulnerability** channel.
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Review lane
+      options:
+        - Windows ABI
+        - Unsafe contracts and ownership
+        - Live Windows behavior
+        - Hostile parsing
+        - Research workflows
+        - Benchmark reproduction
+        - Other technical review
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Revision
+      description: Exact commit SHA or crate version reviewed.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Windows edition/build, architecture, Rust/Cargo versions, privilege level, and VM status.
+    validations:
+      required: true
+  - type: textarea
+    id: procedure
+    attributes:
+      label: Commands and procedure
+      description: Exact commands, feature flags, inputs, and review method.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result and evidence
+      description: Reproducible observations, minimal output, tests, SDK citations, or benchmark CSV.
+    validations:
+      required: true
+  - type: textarea
+    id: relationship
+    attributes:
+      label: Reviewer relationship
+      description: State any affiliation, prior contribution, sponsorship, or conflict; "none" is acceptable.
+    validations:
+      required: true
+  - type: checkboxes
+    id: disclosure
+    attributes:
+      label: Public disclosure check
+      options:
+        - label: This report does not contain a potential vulnerability or sensitive exploit detail.
+          required: true

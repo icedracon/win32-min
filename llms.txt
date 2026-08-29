@@ -17,6 +17,8 @@ common kernel, process, thread, token, registry, and SCM handle lifecycles.
 - [Examples](https://github.com/icedracon/win32-min/tree/master/examples): process, token, registry, service, Event Log, and security workflows
 - [Research workflows](https://github.com/icedracon/win32-min/blob/master/RESEARCH-WORKFLOWS.md): five runnable companion-crate workflows with permission boundaries
 - [Research kit](https://github.com/icedracon/win32-min/tree/master/research-kit): end-to-end identity, service, Kerberos, Event Log, and ACL inventory demo
+- [Independent review](https://github.com/icedracon/win32-min/blob/master/REVIEWING.md): bounded ABI, unsafe-code, Windows, parser, workflow, and benchmark review lanes
+- [Contributing](https://github.com/icedracon/win32-min/blob/master/CONTRIBUTING.md): test expectations and private vulnerability reporting
 
 ## Production companions
 

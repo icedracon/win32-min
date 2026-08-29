@@ -10,6 +10,8 @@ tooling, packaged as one small crate with **zero runtime dependencies**.
 The broader crate family, maturity levels, compatibility policy, and research
 use cases are indexed in [`ECOSYSTEM.md`](ECOSYSTEM.md). AI agents and coding
 assistants can use [`llms.txt`](llms.txt) as the concise machine-readable map.
+Independent reviewers can use [`REVIEWING.md`](REVIEWING.md); contribution and
+private vulnerability-reporting paths are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 The raw declarations mirror the Windows ABI and remain `unsafe`. A small
 zero-dependency ownership layer handles the easy-to-get-wrong close functions

@@ -15,6 +15,8 @@ All notable changes to this project are documented here.
 - Made the three-crate comparison reproducible with committed lockfiles,
   rotating build order, raw timing observations, variance, and an openly
   published Windows baseline.
+- Added contributor guidance, a structured independent-review protocol and
+  issue form, plus private vulnerability reporting on GitHub.
 
 ## 0.1.3 - 2026-08-29
 
